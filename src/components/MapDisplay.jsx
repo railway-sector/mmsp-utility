@@ -31,6 +31,7 @@ function MapDisplay() {
       arcgisScene.map.ground.opacity = 0.7;
       arcgisScene.view.environment.atmosphereEnabled = false;
       arcgisScene.map.ground.navigationConstraint = "none";
+      arcgisScene.view.ui.components = [];
       arcgisSearch.sources = [
         {
           layer: utilityPointLayer,
@@ -71,14 +72,14 @@ function MapDisplay() {
         setSceneView(event.target);
       }}
     >
-      <arcgis-compass position="top-right"></arcgis-compass>
-      <arcgis-expand close-on-esc position="top-right" mode="floating">
+      <arcgis-compass slot="top-right"></arcgis-compass>
+      <arcgis-expand close-on-esc slot="top-right" mode="floating">
         <arcgis-search></arcgis-search>
         {/* <arcgis-placement>
           <calcite-button>Placeholder</calcite-button>
         </arcgis-placement> */}
       </arcgis-expand>
-      <arcgis-zoom position="bottom-right"></arcgis-zoom>
+      <arcgis-zoom slot="bottom-right"></arcgis-zoom>
     </arcgis-scene>
   );
 }
