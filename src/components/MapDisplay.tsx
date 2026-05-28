@@ -1,0 +1,85 @@
+import "../index.css";
+import "@arcgis/map-components/dist/components/arcgis-scene";
+import "@arcgis/map-components/components/arcgis-scene";
+import "@arcgis/map-components/components/arcgis-zoom";
+import "@arcgis/map-components/components/arcgis-legend";
+import "@arcgis/map-components/components/arcgis-basemap-gallery";
+import "@arcgis/map-components/components/arcgis-layer-list";
+import "@arcgis/map-components/components/arcgis-expand";
+import "@arcgis/map-components/components/arcgis-search";
+import "@arcgis/map-components/components/arcgis-compass";
+import {
+  utilityLineLayer1,
+  utilityPointLayer,
+  alignmentGroupLayer,
+  utilityGroupLayer,
+  stationLayer,
+} from "../layers";
+import type { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
+import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
+
+function MapDisplay() {
+  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+  const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
+
+  arcgisScene?.viewOnReady(() => {
+    arcgisScene?.map?.add(alignmentGroupLayer);
+    arcgisScene?.map?.add(utilityGroupLayer);
+    arcgisScene?.map?.add(stationLayer);
+    arcgisScene.hideAttribution = true;
+    arcgisScene.view.environment.atmosphereEnabled = false;
+    arcgisScene.view.environment.starsEnabled = false;
+
+    if (arcgisScene?.map?.ground) {
+      arcgisScene.map.ground.navigationConstraint = { type: "none" };
+      arcgisScene.map.ground.opacity = 0.7;
+    }
+
+    const sources: any = [
+      {
+        layer: utilityPointLayer,
+        searchFields: ["Id"],
+        displayField: "Id",
+        exactMatch: false,
+        outFields: ["Id"],
+        name: "Unique ID (Point)",
+        placeholder: "example: MER0001-X01",
+      },
+      {
+        layer: utilityLineLayer1,
+        searchFields: ["Id"],
+        displayField: "Id",
+        exactMatch: false,
+        outFields: ["Id"],
+        name: "Unique ID (Line)",
+        placeholder: "example: MER0001-X01",
+      },
+    ];
+    arcgisSearch.allPlaceholder = "Pier Number, Chainage, Utility ID";
+    arcgisSearch.includeDefaultSourcesDisabled = true;
+    arcgisSearch.locationDisabled = true;
+    arcgisSearch?.sources.push(...sources);
+  });
+
+  return (
+    <arcgis-scene
+      // item-id="5ba14f5a7db34710897da0ce2d46d55f"
+      basemap="dark-gray-vector"
+      ground="world-elevation"
+      viewingMode="local"
+      zoom={13}
+      center="121.0322874, 14.6750462"
+    >
+      <arcgis-compass slot="top-right"></arcgis-compass>
+      <arcgis-expand close-on-esc slot="top-right" mode="floating">
+        <arcgis-search></arcgis-search>
+        {/* <arcgis-placement>
+          <calcite-button>Placeholder</calcite-button>
+        </arcgis-placement> */}
+      </arcgis-expand>
+      <arcgis-zoom slot="bottom-right"></arcgis-zoom>
+    </arcgis-scene>
+  );
+}
+
+export default MapDisplay;
