@@ -1,90 +1,73 @@
-import { useEffect, useState, use } from "react";
+import { useState } from "react";
 import Select from "react-select";
 import "../index.css";
 import { utilityLineLayer, utilityPointLayer } from "../layers";
 import GenerateDropdownData from "npm-dropdown-package";
-import { MyContext } from "../contexts/MyContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { locationKeys } from "../interfaceKeys";
+import type { SelectedLocation } from "../interfaceKeys";
 
 export function DropdownData() {
-  const { updateStations, updateCompanies, updateTypes } = use(MyContext);
+  const queryClient = useQueryClient();
 
-  // For dropdown filter
-  const [initContractPacakgeCompType, setInitContractPacakgeCompType] =
-    useState([]);
+  const [stationSelected, setStationSelected] = useState<null | any>(null);
+  const [companySelected, setCompanySelected] = useState<null | any>(null);
+  const [utypeSelected, setUtypeSelected] = useState<null | any>(null);
 
-  const [station, setStation] = useState<any>(null);
-  const [companys, setCompany] = useState(null);
-  const [utypes, setType] = useState<null | undefined | string>(null);
+  const [companyList, setCompanyList] = useState<any>([]);
+  const [utypeList, setUtypeList] = useState<any>([]);
 
-  const [companyList, setCompanyList] = useState([]);
-  const [typeList, setTypeList] = useState([]);
-  const [companySelected, setCompanySelected] = useState({ name: "" });
+  const { data: stationList } = useQuery<any>({
+    queryKey: ["dropdownData"], // Do not add lotLayer as a dependency. The dropdown list will not be updated properly.
+    queryFn: async () => {
+      const dropdownData = new GenerateDropdownData(
+        [utilityPointLayer, utilityLineLayer],
+        ["Station1", "Company", "Type"],
+      );
+      return await dropdownData.dropDownQuery();
+    },
+    staleTime: Infinity, // never refetch in the backround on its own.
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
 
-  useEffect(() => {
-    const dropdownData = new GenerateDropdownData(
-      [utilityPointLayer, utilityLineLayer],
-      ["Station1", "Company", "Type"],
-    );
-
-    dropdownData.dropDownQuery().then((response: any) => {
-      setInitContractPacakgeCompType(response);
+  function updateDropdownListValues(
+    station_obj_field: SelectedLocation["station"],
+    comp_obj_field: SelectedLocation["company"],
+    utype_obj_field: SelectedLocation["utype"],
+  ) {
+    return queryClient.setQueryData<SelectedLocation>(locationKeys.selected, {
+      station: station_obj_field,
+      company: comp_obj_field,
+      utype: utype_obj_field,
     });
-  }, []);
+  }
 
   const handleContractPackageChange = (obj: any) => {
-    setStation(obj);
+    updateDropdownListValues(obj.field1, undefined, undefined);
+    setStationSelected(obj);
     setCompanyList(obj.field2);
-    setCompany(null);
-    setCompanySelected(obj);
-    setType(null);
-    updateStations(obj.field1);
-    updateCompanies(undefined);
-    updateTypes(undefined);
+    setCompanySelected(null);
+    setUtypeSelected(null);
   };
 
   const handleCompanyChange = (obj: any) => {
+    updateDropdownListValues(stationSelected?.field1, obj.name, undefined);
     setCompanySelected(obj);
-    setCompany(obj);
-    setTypeList(obj.field3);
-    setType(null);
-    updateCompanies(obj.name);
-    updateTypes(undefined);
+    setUtypeList(obj.field3);
+    setUtypeSelected(null);
   };
 
   const handleTypeChange = (obj: any) => {
-    setType(obj);
-    updateTypes(obj.name);
+    updateDropdownListValues(
+      stationSelected?.field1,
+      companySelected?.name,
+      obj.name,
+    );
+    setUtypeSelected(obj);
   };
 
-  return (
-    <>
-      <DropdownListDisplay
-        handleContractPackageChange={handleContractPackageChange}
-        handleCompanyChange={handleCompanyChange}
-        handleTypeChange={handleTypeChange}
-        initContractPacakgeCompType={initContractPacakgeCompType}
-        contractPackage={station}
-        companys={companys}
-        utypes={utypes}
-        companyList={companyList}
-        typeList={typeList}
-        companySelected={companySelected}
-      ></DropdownListDisplay>
-    </>
-  );
-}
-
-export function DropdownListDisplay({
-  handleContractPackageChange,
-  handleCompanyChange,
-  handleTypeChange,
-  initContractPacakgeCompType,
-  contractPackage,
-  companys,
-  utypes,
-  companyList,
-  typeList,
-}: any) {
   // Style CSS
   const customstyles = {
     option: (styles: any, { isFocused, isSelected }: any) => {
@@ -124,8 +107,8 @@ export function DropdownListDisplay({
       <b style={{ color: "white", margin: 10, fontSize: "0.9vw" }}></b>
       <Select
         placeholder="Select CP"
-        value={contractPackage}
-        options={initContractPacakgeCompType}
+        value={stationSelected}
+        options={stationList && stationList}
         onChange={handleContractPackageChange}
         getOptionLabel={(x: any) => x.field1}
         styles={customstyles}
@@ -134,8 +117,8 @@ export function DropdownListDisplay({
       <b style={{ color: "white", margin: 10, fontSize: "0.9vw" }}></b>
       <Select
         placeholder="Select Company"
-        value={companys}
-        options={companyList}
+        value={companySelected}
+        options={companyList && companyList}
         onChange={handleCompanyChange}
         getOptionLabel={(x: any) => x.name}
         styles={customstyles}
@@ -144,8 +127,8 @@ export function DropdownListDisplay({
       <b style={{ color: "white", margin: 10, fontSize: "0.9vw" }}></b>
       <Select
         placeholder="Select Type"
-        value={utypes}
-        options={typeList}
+        value={utypeSelected}
+        options={utypeList && utypeList}
         onChange={handleTypeChange}
         getOptionLabel={(x: any) => x.name}
         styles={customstyles}
