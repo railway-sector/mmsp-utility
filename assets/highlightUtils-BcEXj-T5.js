@@ -1,1 +1,0 @@
-import{CX as t,GZ as e,od as n}from"./index-CBmRE7NQ.js";function o(r){return t.isCollection(r)?r.toArray():Array.isArray(r)?r:i(r)||e(r)||a(r)?[r]:s}function i(r){return typeof r=="number"||typeof r=="string"}const s=[],u=n();function a(r){return r.declaredClass==="esri.views.3d.layers.i3s.PointCloudGraphic"}export{i as e,o as i,u as s};
