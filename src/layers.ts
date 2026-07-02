@@ -12,10 +12,26 @@ import IconSymbol3DLayer from "@arcgis/core/symbols/IconSymbol3DLayer.js";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D.js";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer.js";
 import QueryExpressionLayers from "query-layers-expression";
-import { company_field, station_field, utilTypeField } from "./uniqueValues";
+import {
+  company_field,
+  station_field,
+  status_Field,
+  utility_category_types,
+  utilTypeField,
+} from "./uniqueValues";
+import ChartStackColumns from "chart-stack-column";
+
+export const chartstack = new ChartStackColumns(
+  undefined, // qChart
+  utility_category_types, // categoryTypes
+  undefined, // categoryTypeField
+  undefined, // layers
+  status_Field, // status field
+  undefined, // statusState
+);
 
 export const queryc = new QueryExpressionLayers(
-  undefined,
+  [undefined],
   [station_field, company_field, utilTypeField],
   undefined,
   undefined,
@@ -995,3 +1011,24 @@ export const alignmentGroupLayer = new GroupLayer({
   visibilityMode: "independent",
   layers: [stationBoxLayer, constructionBoundaryLayer], //stationLayer,
 });
+
+export const sources: any = [
+  {
+    layer: utilityPointLayer,
+    searchFields: ["Id"],
+    displayField: "Id",
+    exactMatch: false,
+    outFields: ["Id"],
+    name: "Unique ID (Point)",
+    placeholder: "example: MER0001-X01",
+  },
+  {
+    layer: utilityLineLayer1,
+    searchFields: ["Id"],
+    displayField: "Id",
+    exactMatch: false,
+    outFields: ["Id"],
+    name: "Unique ID (Line)",
+    placeholder: "example: MER0001-X01",
+  },
+];

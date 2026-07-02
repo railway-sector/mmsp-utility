@@ -9,11 +9,10 @@ import "@arcgis/map-components/components/arcgis-expand";
 import "@arcgis/map-components/components/arcgis-search";
 import "@arcgis/map-components/components/arcgis-compass";
 import {
-  utilityLineLayer1,
-  utilityPointLayer,
   alignmentGroupLayer,
   utilityGroupLayer,
   stationLayer,
+  sources,
 } from "../layers";
 import type { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
@@ -37,26 +36,6 @@ function MapDisplay() {
       arcgisScene.map.ground.opacity = 0.7;
     }
 
-    const sources: any = [
-      {
-        layer: utilityPointLayer,
-        searchFields: ["Id"],
-        displayField: "Id",
-        exactMatch: false,
-        outFields: ["Id"],
-        name: "Unique ID (Point)",
-        placeholder: "example: MER0001-X01",
-      },
-      {
-        layer: utilityLineLayer1,
-        searchFields: ["Id"],
-        displayField: "Id",
-        exactMatch: false,
-        outFields: ["Id"],
-        name: "Unique ID (Line)",
-        placeholder: "example: MER0001-X01",
-      },
-    ];
     arcgisSearch.allPlaceholder = "Pier Number, Chainage, Utility ID";
     arcgisSearch.includeDefaultSourcesDisabled = true;
     arcgisSearch.locationDisabled = true;
@@ -78,9 +57,6 @@ function MapDisplay() {
       <arcgis-compass slot="top-right"></arcgis-compass>
       <arcgis-expand close-on-esc slot="top-right" mode="floating">
         <arcgis-search></arcgis-search>
-        {/* <arcgis-placement>
-          <calcite-button>Placeholder</calcite-button>
-        </arcgis-placement> */}
       </arcgis-expand>
       <arcgis-zoom slot="bottom-right"></arcgis-zoom>
     </arcgis-scene>
