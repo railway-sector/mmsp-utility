@@ -1,48 +1,44 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import {
   utilityPointLayer1,
   utilityLineLayer1,
   utilityPointLayer,
   utilityLineLayer,
-  queryc,
-  chartstack,
+  utilityLayers,
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import { thousands_separators, zoomToLayer } from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import {
-  chartCategoryTypeField,
-  status_Field,
-  statusArray,
-  statusColorForChart,
-  utility_category_types,
+  company_f,
+  station_f,
+  util_dtype_f,
+  util_status_f,
+  util_status_q,
+  util_type_f,
+  util_types,
 } from "../uniqueValues";
-import { chartRenderer } from "../chartRenderer";
 import { queryDefinitionExpression } from "../queryExpression";
 import { legendSetter, rootSetter } from "../chartSetter";
 import { useQuery } from "@tanstack/react-query";
-import { locationKeys } from "../interfaceKeys";
-import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
+import type { ChartResponse } from "../interfaceKeys";
+import ChartStackColumns from "chart-stack-column";
+import { MyContext } from "../contexts/MyContext";
+import QueryExpressionLayers from "query-layers-expression";
+import ChartStackColumnRender from "chart-stack-column-render";
 
-// Draw chart
-const Chart = () => {
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-
-  //--- 1. Location state
-  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const station = selectedLocation?.station;
-  const company = selectedLocation?.company;
-  const utype = selectedLocation?.utype;
-
-  //--- 2. Streamlined Data Fetching with useQuery
-  const { data } = useQuery<ChartResponse | any>({
+//-----------------------//
+//     usetUtilityData   //
+//-----------------------//
+function useUtilityData(
+  station: string,
+  company: string,
+  utype: string,
+  query: any,
+) {
+  return useQuery<ChartResponse | any>({
     queryKey: [
       station,
       company,
@@ -51,13 +47,12 @@ const Chart = () => {
       utilityPointLayer1,
       utilityLineLayer,
       utilityLineLayer1,
-      status_Field,
+      util_status_f,
+      query,
     ],
     queryFn: async () => {
-      queryc.qValues = [station, company, utype];
-
       queryDefinitionExpression({
-        queryExpression: queryc.queryExpression(),
+        queryExpression: query.queryExpression(),
         featureLayer: [
           utilityPointLayer,
           utilityPointLayer1,
@@ -66,13 +61,15 @@ const Chart = () => {
         ],
       });
 
-      chartstack.qChart = queryc.queryExpression();
-      chartstack.categoryTypeField = chartCategoryTypeField;
-      chartstack.layers = [utilityPointLayer, utilityLineLayer];
-      chartstack.statusState = [0, 2, 3, 1]; // 2, 3 are dummy
-      const chartData = await chartstack.chartDataStackColumns();
-
-      zoomToLayer(utilityPointLayer, arcgisScene?.view);
+      //--- chart data
+      const chartData = await new ChartStackColumns({
+        where: query,
+        categoryTypes: util_types,
+        categoryTypeField: util_type_f,
+        layers: [utilityPointLayer, utilityLineLayer],
+        statusField: util_status_f,
+        statusState: [0, 2, 3, 1],
+      }).chartDataStackColumns();
 
       return {
         chartData: chartData[0] || [],
@@ -82,6 +79,29 @@ const Chart = () => {
     },
     staleTime: Infinity,
   });
+}
+
+// Draw chart
+const Chart = () => {
+  const { station, company, utype } = use(MyContext);
+
+  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+
+  //--Recompute only when utype is updated
+  const rLayers = useMemo(
+    () => (!utype ? Object.values(utilityLayers).flat() : utilityLayers[utype]),
+    [utype],
+  );
+
+  //--- Query Expression
+  const q1 = new QueryExpressionLayers({
+    qFields: [station_f, company_f, util_dtype_f],
+    qValues: [station, company, utype],
+  });
+
+  //--- 2. Streamlined Data Fetching with useQuery
+  const { data } = useUtilityData(station, company, utype, q1);
   const chartData = data?.chartData || [];
   const totaln = data?.totaln || 0;
   const perc_comp = data?.perc || 0;
@@ -110,9 +130,19 @@ const Chart = () => {
   const new_axisFontSize = chartPanelwidth * 0.036;
   const new_imageSize = chartPanelwidth * 0.055;
 
-  // Utility Chart
+  const zoomFiltersRef = useRef(`${station}-${company}-${utype}`);
+
   useEffect(() => {
+    const currentZoomFilters = `${station}-${company}-${utype}`;
+
+    if (currentZoomFilters !== zoomFiltersRef.current) {
+      zoomFiltersRef.current = currentZoomFilters;
+      zoomToLayer(utilityPointLayer, arcgisScene?.view);
+    }
+
     const root = rootSetter({ chartID: chartID });
+    root.setThemes([]);
+
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false,
@@ -144,34 +174,32 @@ const Chart = () => {
     });
     legendRef.current = legend;
 
-    chartRenderer({
-      root: root,
-      chart: chart,
+    //--- Chart Renderer
+    new ChartStackColumnRender({
+      revit: false,
+      layers: rLayers,
+      root,
+      chart,
       data: chartData,
-      layers: [
-        utilityPointLayer,
-        utilityPointLayer1,
-        utilityLineLayer,
-        utilityLineLayer1,
-      ],
-      qChart: queryc,
-      chartCategoryTypes: utility_category_types,
-      chartCategoryFieldScene: chartCategoryTypeField,
+      buildingLayer: undefined,
+      where: q1,
+      chartCategoryTypes: util_types,
+      chartCategoryTypeField: util_type_f,
       statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
       statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
-      statusArray: statusArray,
-      statusField: status_Field,
-      seriesStatusColor: statusColorForChart,
+      statusArray: util_status_q,
+      statusField: util_status_f,
+      seriesStatusColor: util_status_q.map((c: any) => c.color),
       strokeColor: chartBorderLineColor,
       strokeWidth: chartBorderLineWidth,
-      arcgisScene: arcgisScene,
-      new_chartIconSize: new_chartIconSize,
-      new_axisFontSize: new_axisFontSize,
-      chartIconPositionX: chartIconPositionX,
-      chartPaddingRightIconLabel: chartPaddingRightIconLabel,
-      legend: legend,
+      view: arcgisScene?.view,
+      new_chartIconSize,
+      new_axisFontSize,
+      chartIconPositionX,
+      chartPaddingRightIconLabel,
+      legend,
       updateChartPanelwidth: setChartPanelwidth,
-    });
+    }).chartRendererColumn();
 
     chart.appear(1000, 100);
 
@@ -197,14 +225,7 @@ const Chart = () => {
           justifyContent: "space-between",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            // marginLeft: "15px",
-            // marginRight: "25px",
-            justifyContent: "space-between",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           <img
             src="https://EijiGorilla.github.io/Symbols/Utility_Logo.png"
             alt="Utility Logo"

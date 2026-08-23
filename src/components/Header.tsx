@@ -1,19 +1,14 @@
 import { DropdownData } from "./DropdownContext";
 import { dateUpdate } from "../query";
-import { dateDisplayKeys } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
-import type { DisplayDates } from "../interfaceKeys";
 
 function Header() {
-  const { data } = useQuery<DisplayDates | any>({
-    queryKey: [dateDisplayKeys.selected],
-    queryFn: () => dateUpdate(),
-    select: (response) => {
-      return { asOfDate: response };
-    },
+  const { data } = useQuery<any>({
+    queryKey: ["As_Of_Date"],
+    queryFn: () => dateUpdate("Utility Relocation"),
     staleTime: Infinity,
   });
-  const asOfDate = data?.asOfDate || "";
+  const asofdate = data ?? "";
 
   return (
     <>
@@ -22,7 +17,6 @@ function Header() {
         id="header-title"
         style={{
           display: "flex",
-
           height: "70px",
           padding: "0 1rem",
           borderStyle: "solid",
@@ -31,43 +25,42 @@ function Header() {
         }}
       >
         <img
-          src="https://EijiGorilla.github.io/Symbols/Projec_Logo/DOTr_Logo_v2.png"
+          src="https://EijiGorilla.github.io/Symbols/Projec_Logo/DOTr_Logo_v2.svg"
           alt="DOTr Logo"
           height={"55px"}
           width={"55px"}
-          style={{
-            marginBottom: "auto",
-            marginTop: "auto",
-          }}
+          style={{ marginBottom: "auto", marginTop: "auto" }}
         />
-        <h2 style={{ color: "white", marginLeft: "15px", width: "100%" }}>
-          MMSP UTILITY (REFERENCE ONLY)
-        </h2>
-        <div
+        <span
           style={{
-            color: "#9ca3af",
-            marginTop: "auto",
+            display: "flex",
+            alignItems: "center",
+            fontSize: "1.3rem",
+            fontWeight: "bold",
+            color: "white",
+            marginLeft: "15px",
             width: "100%",
-            paddingLeft: "70px",
           }}
         >
-          {!asOfDate ? "" : "As of " + asOfDate}
+          MMSP UTILITY (REFERENCE ONLY)
+        </span>
+        <div style={{ color: "#9ca3af", marginTop: "auto", width: "100%" }}>
+          {!asofdate ? "" : "As of " + asofdate}
         </div>
 
         {/* Dropdown component */}
         <DropdownData />
 
         <img
-          src="https://EijiGorilla.github.io/Symbols/Projec_Logo/GCR LOGO.png"
+          src="https://EijiGorilla.github.io/Symbols/Projec_Logo/MMSP.png"
           alt="GCR Logo"
           height={"50px"}
           width={"75px"}
           style={{
             marginBottom: "auto",
             marginTop: "auto",
-
             marginLeft: "25px",
-            paddingRight: "35px",
+            paddingRight: "10px",
           }}
         />
       </header>
