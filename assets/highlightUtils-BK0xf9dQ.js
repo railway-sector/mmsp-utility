@@ -1,1 +1,0 @@
-import{Cu as n,Gi as t,nW as e}from"./index-CxV0ByiW.js";function c(r){return n.isCollection(r)?r.toArray():Array.isArray(r)?r:i(r)||t(r)||a(r)?[r]:s}function i(r){return typeof r=="number"||typeof r=="string"}const s=[],o=e();function a(r){return r.declaredClass==="esri.views.3d.layers.i3s.PointCloudGraphic"}export{i as e,c as i,o as s};
