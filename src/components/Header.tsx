@@ -53,9 +53,9 @@ function Header() {
 
         <img
           src="https://EijiGorilla.github.io/Symbols/Projec_Logo/MMSP.png"
-          alt="GCR Logo"
+          alt="MMSP Logo"
           height={"50px"}
-          width={"75px"}
+          width={"97px"}
           style={{
             marginBottom: "auto",
             marginTop: "auto",

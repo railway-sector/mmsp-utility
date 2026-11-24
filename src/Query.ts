@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+// import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { dateTable } from "./layers";
 
 //---------------------------------------------------------//
